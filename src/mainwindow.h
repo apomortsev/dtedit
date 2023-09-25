@@ -312,6 +312,21 @@ private:
   bool           blocked;         ///\> UI udate blocking flag.
   QMutex         receiveMutex;    ///\> Mutex to avoid endless recursion.
   QString        versionString;   ///\> Holds the current amp version.
+  bool           isDT50;          ///\> True if DT50, false otherwize.
+};
+
+class QDTComboBox : public QComboBox {
+    Q_OBJECT// Qt magic...
+
+public:
+    QDTComboBox(QWidget* parent = 0)
+        : QComboBox(parent) {
+    }
+
+    virtual ~QDTComboBox() {
+    }
+
+    virtual void showPopup();
 };
 
 #endif // #ifndef __MAINWINDOW_H_INCLUDED__

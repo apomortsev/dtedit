@@ -29,5 +29,6 @@
         <file>images/about_disabled.png</file>
         <file>images/midi.png</file>
         <file>images/midi_disabled.png</file>
+        <file>images/arrow-down.png</file>
     </qresource>
 </RCC>

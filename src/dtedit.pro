@@ -16,7 +16,8 @@ SOURCES += main.cpp\
     setupdialog.cpp \
     aboutdialog.cpp \
     dtedit.cpp \
-    mainmidiwindow.cpp
+    mainmidiwindow.cpp \
+    RtMidi/RtMidi.cpp
 
 HEADERS  += mainwindow.h \
     setupdialog.h \
@@ -28,7 +29,11 @@ HEADERS  += mainwindow.h \
     qimageled.h \
     qimagetoggle4.h \
     qimagebutton.h \
-    qimagewidget.h
+    qimagewidget.h \
+    RtMidi/RtError.h \
+    RtMidi/RtMidi.h \
+    ui_aboutdialog.h \
+    ui_setupdialog.h
 
 win* {
     DEFINES += __WINDOWS_MM__
@@ -43,6 +48,14 @@ linux* {
     CONFIG += link_pkgconfig \
         x11
     PKGCONFIG += alsa
+}
+
+macx* {
+    DEFINES += __MACOSX_CORE__
+    LIBS += -framework CoreAudio
+    LIBS += -framework CoreMidi
+    LIBS += -framework CoreServices
+    ICON = images/dtedit64.png
 }
 
 debug:DEFINES += __RTMIDI_DEBUG__

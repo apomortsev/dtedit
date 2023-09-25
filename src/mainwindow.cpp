@@ -29,6 +29,14 @@
 #include "mainwindow.h"
 #include "aboutdialog.h"
 
+void QDTComboBox::showPopup() {
+  QListView* aiv = dynamic_cast<QListView*>(this->view());
+  if (aiv) {
+    aiv->move(0, 0);
+  }
+  QComboBox::showPopup();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // MainWindow::MainWindow()
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +46,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 MainWindow::MainWindow(QWidget *parent) :
   MainMIDIWindow(parent),
-  blocked(false)
+  blocked(false), isDT50(false)
 {
   // Init title:
   setWindowTitle("DT Edit");
@@ -323,14 +331,18 @@ void MainWindow::controlChangeReceived(unsigned char channel, unsigned char cont
     boostA->blockSignals(oldState);
     break;
   case CC_PI_VOLTAGE_A:
-    oldState = pivoltA->blockSignals(true);
-    pivoltA->setValue(value >= 64 ? 1 : 0);
-    pivoltA->blockSignals(oldState);
+    if (isDT50) {
+      oldState = pivoltA->blockSignals(true);
+      pivoltA->setValue(value >= 64 ? 1 : 0);
+      pivoltA->blockSignals(oldState);
+    }
     break;
   case CC_CAP_TYPE_A:
-    oldState = capA->blockSignals(true);
-    capA->setValue(value >= 64 ? 1 : 0);
-    capA->blockSignals(oldState);
+    if (isDT50) {
+      oldState = capA->blockSignals(true);
+      capA->setValue(value >= 64 ? 1 : 0);
+      capA->blockSignals(oldState);
+    }
     break;
   case CC_AMP_B:
     oldState = ampB->blockSignals(true);
@@ -436,14 +448,18 @@ void MainWindow::controlChangeReceived(unsigned char channel, unsigned char cont
     boostB->blockSignals(oldState);
     break;
   case CC_PI_VOLTAGE_B:
-    oldState = pivoltB->blockSignals(true);
-    pivoltB->setValue(value >= 64 ? 1 : 0);
-    pivoltB->blockSignals(oldState);
+    if (isDT50) {
+      oldState = pivoltB->blockSignals(true);
+      pivoltB->setValue(value >= 64 ? 1 : 0);
+      pivoltB->blockSignals(oldState);
+    }
     break;
   case CC_CAP_TYPE_B:
-    oldState = capB->blockSignals(true);
-    capB->setValue(value >= 64 ? 1 : 0);
-    capB->blockSignals(oldState);
+    if (isDT50) {
+      oldState = capB->blockSignals(true);
+      capB->setValue(value >= 64 ? 1 : 0);
+      capB->blockSignals(oldState);
+    }
     break;
   case CC_XLR_MIC:
     oldState = mic->blockSignals(true);
@@ -499,12 +515,15 @@ void MainWindow::sysExReceived(const std::vector<unsigned char>& buff)
     {
     case 0:
       versionString = "DT50 1x12 Combo";
+      isDT50 = true;
       break;
     case 1:
       versionString = "DT50 212 Combo";
+      isDT50 = true;
       break;
     case 2:
       versionString = "DT50 Head";
+      isDT50 = true;
       break;
     case 3:
       versionString = "DT25 1x12 Combo";
@@ -525,6 +544,11 @@ void MainWindow::sysExReceived(const std::vector<unsigned char>& buff)
     versionString += (char)buff[14];
     versionString += (char)buff[15];
 
+    pivoltA->setEnabled(isDT50);
+    capA->setEnabled(isDT50);
+    pivoltB->setEnabled(isDT50);
+    capB->setEnabled(isDT50);
+
     // Force a redraw:
     update();
   }
@@ -539,10 +563,28 @@ void MainWindow::createEditArea()
 {
   int x0 = 0;
   int y0 = 22;
-  #ifdef __LINUX_ALSA__
+  #if defined (__LINUX_ALSA__)
   QString comboStyle("QComboBox { border: 1px solid black; }");
-  #else
-  QString comboStyle("QComboBox { background: #202020; color: white; border: 1px solid #606060; }");
+  #elif defined (__MACOSX_CORE__)
+  QString comboStyle(
+    "QComboBox {"
+        "background: #202020; color: white; border: 1px solid #606060;"
+        "selection-background-color: #707070;"
+     "}"
+     "QComboBox QAbstractItemView {"
+        "background: #202020; color: white; border: 1px solid #606060; left: 0;"
+        "min-width: 200px;"
+     "}"
+     "QComboBox::drop-down {"
+        "border-left-width: 1px;"
+        "border-left-color: #606060;"
+        "border-left-style: solid;"
+     "}"
+     "QComboBox::down-arrow {"
+          "width: 7px;"
+          "image: url(:/images/arrow-down.png);"
+     "}"
+  );
   #endif
 
   QPixmap I_II_III_IV(":/images/I_II_III_IV.png");
@@ -580,7 +622,7 @@ void MainWindow::createEditArea()
   voiceA->setTag(CC_VOICE_A);
   connect(voiceA, SIGNAL(valueChanged()), this, SLOT(toggle4Changed()));
 
-  ampA = new QComboBox(this);
+  ampA = new QDTComboBox(this);
   ampA->addItem("None");
   ampA->addItem("Blackface Double Normal");
   ampA->addItem("Blackface Double Vib");
@@ -810,7 +852,7 @@ void MainWindow::createEditArea()
   pivoltA->setGeometry(x0 + 795, y0 + 112, 64, 88);
   pivoltA->setImage(piv);
   pivoltA->setDisabledImage(piv_disabled);
-  pivoltA->setEnabled(true);
+  pivoltA->setEnabled(isDT50);
   pivoltA->setTag(CC_PI_VOLTAGE_A);
   connect(pivoltA, SIGNAL(valueChanged()), this, SLOT(toggleChanged()));
 
@@ -818,7 +860,7 @@ void MainWindow::createEditArea()
   capA->setGeometry(x0 + 871, y0 + 112, 64, 88);
   capA->setImage(cap);
   capA->setDisabledImage(cap_disabled);
-  capA->setEnabled(true);
+  capA->setEnabled(isDT50);
   capA->setTag(CC_CAP_TYPE_A);
   connect(capA, SIGNAL(valueChanged()), this, SLOT(toggleChanged()));
 
@@ -1060,7 +1102,7 @@ void MainWindow::createEditArea()
   pivoltB->setGeometry(x0 + 795, y0 + 316, 64, 88);
   pivoltB->setImage(piv);
   pivoltB->setDisabledImage(piv_disabled);
-  pivoltB->setEnabled(true);
+  pivoltB->setEnabled(isDT50);
   pivoltB->setTag(CC_PI_VOLTAGE_B);
   connect(pivoltB, SIGNAL(valueChanged()), this, SLOT(toggleChanged()));
 
@@ -1068,7 +1110,7 @@ void MainWindow::createEditArea()
   capB->setGeometry(x0 + 871, y0 + 316, 64, 88);
   capB->setImage(cap);
   capB->setDisabledImage(cap_disabled);
-  capB->setEnabled(true);
+  capB->setEnabled(isDT50);
   capB->setTag(CC_CAP_TYPE_B);
   connect(capB, SIGNAL(valueChanged()), this, SLOT(toggleChanged()));
 

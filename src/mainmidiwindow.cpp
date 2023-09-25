@@ -72,21 +72,23 @@ bool MainMIDIWindow::openMIDIPorts()
   midiOut.closePort();
 
   // Check names:
-  if (midiInName.isEmpty() || midiOutName.isEmpty())
+  if (midiOutName.isEmpty())
     return false;
 
   // Find MIDI in port number:
   int inPortNo = -1;
-  for (int i = 0; i < static_cast<int>(midiIn.getPortCount()); i++)
-  {
-    if (midiInName.compare(midiIn.getPortName(i).c_str()) == 0)
+  if (!midiInName.isEmpty()) {
+    for (int i = 0; i < static_cast<int>(midiIn.getPortCount()); i++)
     {
-      inPortNo = i;
-      break;
+      if (midiInName.compare(midiIn.getPortName(i).c_str()) == 0)
+      {
+        inPortNo = i;
+        break;
+      }
     }
+    if (inPortNo < 0)
+      return false;
   }
-  if (inPortNo < 0)
-    return false;
 
   // Find MIDI out port number:
   int outPortNo = -1;
@@ -103,10 +105,12 @@ bool MainMIDIWindow::openMIDIPorts()
 
   try
   {
-    // Open MIDI in port:
-    midiIn.setCallback(onMIDIMessageProxy, this);
-    midiIn.openPort(inPortNo);
-    midiIn.ignoreTypes(false, true, true);
+    if (inPortNo >= 0) {
+      // Open MIDI in port:
+      midiIn.setCallback(onMIDIMessageProxy, this);
+      midiIn.openPort(inPortNo);
+      midiIn.ignoreTypes(false, true, true);
+    }
 
     // Open MIDI out port:
     midiOut.openPort(outPortNo);

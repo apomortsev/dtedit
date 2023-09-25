@@ -120,10 +120,10 @@ void SetupDialog::showEvent(QShowEvent* /*e*/)
   // Get MIDI in properties:
   RtMidiIn midiIn;
   unsigned int portCnt = midiIn.getPortCount();
+  int selItem = -1;
+
   if (portCnt > 0)
   {
-    int selItem = -1;
-
     // Loop through MIDI ports:
     for (unsigned int i = 0; i < portCnt; i++)
     {
@@ -142,13 +142,17 @@ void SetupDialog::showEvent(QShowEvent* /*e*/)
     ui->inputComboBox->setCurrentIndex(selItem);
   }
 
+  if (selItem < 0) {
+    inputName.clear();
+  }
+
   // Get MIDI out properties:
   RtMidiOut midiOut;
   portCnt = midiOut.getPortCount();
+  selItem = -1;
+
   if (portCnt > 0)
   {
-    int selItem = -1;
-
     // Loop through MIDI ports:
     for (unsigned int i = 0; i < portCnt; i++)
     {
@@ -165,6 +169,10 @@ void SetupDialog::showEvent(QShowEvent* /*e*/)
 
     // Select current item, if any:
     ui->outputComboBox->setCurrentIndex(selItem);
+  }
+
+  if (selItem < 0) {
+    outputName.clear();
   }
 
   // Unlock UI:
